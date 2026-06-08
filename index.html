@@ -516,7 +516,11 @@
 
         const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            // Skip ngrok's free-tier browser interstitial so the request reaches n8n
+            'ngrok-skip-browser-warning': 'true'
+          },
           body: JSON.stringify(payload)
         });
 
