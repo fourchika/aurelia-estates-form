@@ -470,12 +470,18 @@
   </main>
 
   <script>
+    /* =====================================================================
+       ⚙️  EDIT THIS ONE LINE ONLY
+       Paste your ngrok https URL here (keep the /webhook/lead path).
+       Example: const WEBHOOK_URL = "https://abc123.ngrok-free.app/webhook/lead";
+       ===================================================================== */
+    const WEBHOOK_URL = "NGROK_URL_HERE/webhook/lead";
+    /* ===================================================================== */
+
     const form = document.getElementById('leadForm');
     const success = document.getElementById('success');
     const submitBtn = document.getElementById('submitBtn');
     const errorMsg = document.getElementById('errorMsg');
-
-    const ENDPOINT = 'http://localhost:5678/webhook/lead';
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -504,7 +510,11 @@
       submitBtn.textContent = 'Sending…';
 
       try {
-        const res = await fetch(ENDPOINT, {
+        if (WEBHOOK_URL.startsWith('NGROK_URL_HERE')) {
+          throw new Error('config'); // WEBHOOK_URL hasn't been set yet
+        }
+
+        const res = await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -517,7 +527,18 @@
         success.classList.add('show');
       } catch (err) {
         console.error(err);
+
+        // Friendly, situation-specific message instead of a silent failure
+        if (err.message === 'config') {
+          errorMsg.textContent = 'This form isn’t connected yet. Please try again later.';
+        } else if (err instanceof TypeError) {
+          // fetch throws a TypeError when the server is unreachable / CORS / offline
+          errorMsg.textContent = 'We couldn’t reach our server. Please check your connection and try again.';
+        } else {
+          errorMsg.textContent = 'Something went wrong on our end. Please try again in a moment.';
+        }
         errorMsg.style.display = 'block';
+
         submitBtn.disabled = false;
         submitBtn.textContent = 'Submit Inquiry';
       }
